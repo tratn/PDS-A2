@@ -7,19 +7,6 @@ import base64
 
 @st.cache(suppress_st_warning=True)
 
-# Function that collect user inputs to be used as features for prediction
-def get_user_input():
-    st.sidebar.title('Input Features')
-    gender = st.sidebar.selectbox('Gender',('male','female'))
-    age = st.sidebar.number_input('Age', 18, 90, 18)
-    #TODO: add more features 
-
-    data = {'gender': gender, 'age': age}
-    # create dataframe 
-    features = pd.DataFrame(data, index=[0])
-    return features
-
-
 # Create a sidebar to allow user select page 
 # Exploration - contains 2 plots from task 1; Prediction - contains 1 plot from model predictions
 st.sidebar.title('Select the page to display visualisation')
