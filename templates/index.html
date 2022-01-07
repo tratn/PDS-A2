@@ -2,7 +2,7 @@
 <html >
 <head>
   <meta charset="UTF-8">
-  <title>Deployment Tutorial 1</title>
+  <title>Data Deployment</title>
   <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
 <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
 <link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
@@ -16,12 +16,6 @@
 	<h1>Data Deployment</h1>
 
      <!-- Main Input For Receiving Query to our ML -->
-    <form action="{{ url_for('healthcheck')}}"method="post">
-        <button type="submit" class="btn btn-primary btn-block btn-large">Health Check</button>
-    </form>
-
-    <br>
-
     <form action="{{ url_for('predict')}}"method="post">
         <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
     </form>
