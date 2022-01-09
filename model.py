@@ -80,56 +80,58 @@ preprocess["ConvertedComp"] = pd.cut(preprocess["ConvertedComp"],
                                      labels=['<25k', '<50k', '<100k', '>100k'],
                                      include_lowest=True)
 
-# Modeling
+
+# # Modeling
 df_train = pd.DataFrame(data=preprocess, columns=['Respondent', 'MainBranch', 'Age', 'Hobbyist', 'CompFreq', 'Country',
                                                   'Employment', 'ConvertedComp', 'DevType', 'EdLevel', 'JobSat', 'WorkWeekHrs', 'OpSys',
                                                   'YearsCodePro', 'YearsCode'])
 df_train['Age'] = df_train['Age'].astype('int')
 df_train.loc[df_train['Age'] < 16, 'Age'] = 16
 df_train.loc[df_train['Age'] > 83, 'Age'] = 83
+print(df_train.shape)
 
 
-df_train['DevType'] = df_train['DevType'].str.split(';')
-df_train = df_train.explode('DevType')
-df_train = df_train.reset_index(drop=True)
+# df_train['DevType'] = df_train['DevType'].str.split(';')
+# df_train = df_train.explode('DevType')
+# df_train = df_train.reset_index(drop=True)
 
-# Catboost model
-right_df = pd.DataFrame(data=preprocess, columns=['Respondent', 'MainBranch',
-                                                  'Hobbyist', 'CompFreq', 'Country', 'JobSat', 'Age', 'Employment', 'EdLevel', 'ConvertedComp',
-                                                  'WorkWeekHrs', 'OpSys', 'YearsCodePro', 'YearsCode'])
-left_df = pd.crosstab(df_train['Respondent'], df_train['DevType']).rename_axis(
-    None, axis=1).add_prefix('DevType_').reset_index()
-df_train_new = pd.merge(right_df, left_df, on="Respondent")
+# # Catboost model
+# right_df = pd.DataFrame(data=preprocess, columns=['Respondent', 'MainBranch',
+#                                                   'Hobbyist', 'CompFreq', 'Country', 'JobSat', 'Age', 'Employment', 'EdLevel', 'ConvertedComp',
+#                                                   'WorkWeekHrs', 'OpSys', 'YearsCodePro', 'YearsCode'])
+# left_df = pd.crosstab(df_train['Respondent'], df_train['DevType']).rename_axis(
+#     None, axis=1).add_prefix('DevType_').reset_index()
+# df_train_new = pd.merge(right_df, left_df, on="Respondent")
 
-df_train_new['WorkWeekHrs'] = df_train_new['WorkWeekHrs'].astype('int')
-df_train_new['YearsCodePro'] = df_train_new['YearsCodePro'].astype('category')
-df_train_new['YearsCode'] = df_train_new['YearsCode'].astype('category')
-df_train_new['OpSys'] = df_train_new['OpSys'].astype('category')
-df_train_new['Employment'] = df_train_new['Employment'].astype('category')
-df_train_new['Country'] = df_train_new['Country'].astype('category')
-df_train_new['CompFreq'] = df_train_new['CompFreq'].astype('category')
-df_train_new['Hobbyist'] = df_train_new['Hobbyist'].astype('category')
-df_train_new['MainBranch'] = df_train_new['MainBranch'].astype('category')
-df_train_new['EdLevel'] = df_train_new['EdLevel'].astype('category')
-df_train_new['JobSat'] = df_train_new['JobSat'].astype('category')
-# df_train_new['CompTotal'] = df_train_new['CompTotal'].astype('category')
-
-
-df_train_new = df_train_new.drop(['Respondent'], axis=1)
+# df_train_new['WorkWeekHrs'] = df_train_new['WorkWeekHrs'].astype('int')
+# df_train_new['YearsCodePro'] = df_train_new['YearsCodePro'].astype('category')
+# df_train_new['YearsCode'] = df_train_new['YearsCode'].astype('category')
+# df_train_new['OpSys'] = df_train_new['OpSys'].astype('category')
+# df_train_new['Employment'] = df_train_new['Employment'].astype('category')
+# df_train_new['Country'] = df_train_new['Country'].astype('category')
+# df_train_new['CompFreq'] = df_train_new['CompFreq'].astype('category')
+# df_train_new['Hobbyist'] = df_train_new['Hobbyist'].astype('category')
+# df_train_new['MainBranch'] = df_train_new['MainBranch'].astype('category')
+# df_train_new['EdLevel'] = df_train_new['EdLevel'].astype('category')
+# df_train_new['JobSat'] = df_train_new['JobSat'].astype('category')
+# # df_train_new['CompTotal'] = df_train_new['CompTotal'].astype('category')
 
 
-y = df_train_new['ConvertedComp']
-train_data = df_train_new.drop(['ConvertedComp'], axis=1)
+# df_train_new = df_train_new.drop(['Respondent'], axis=1)
 
-cat_features = np.where(train_data.dtypes == 'category')[0]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    train_data, y, test_size=0.2, random_state=42)
+# y = df_train_new['ConvertedComp']
+# train_data = df_train_new.drop(['ConvertedComp'], axis=1)
+
+# cat_features = np.where(train_data.dtypes == 'category')[0]
+
+# X_train, X_test, y_train, y_test = train_test_split(
+#     train_data, y, test_size=0.2, random_state=42)
 
 # X_test.to_csv('X_test.csv', index=False)
 # y_test.to_csv('y_test.csv', index=False)
 
-train_pool = Pool(X_train, y_train, cat_features)
+# train_pool = Pool(X_train, y_train, cat_features)
 
 
 # catboost_model = CatBoostClassifier(iterations=250,
