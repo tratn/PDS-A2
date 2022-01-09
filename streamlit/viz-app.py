@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import requests
+import json
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -184,21 +185,28 @@ elif app_mode is 'Prediction':
     # PREDICTION
     st.subheader('Prediction')
     # get the data from flask api
-    #pred_url = ''
-    #pred_res = requests.post(pred_url)
-    #pred_data = pd.DataFrame(pred_res.json())
+    pred_url = 'http://127.0.0.1:5000/predict'
+    pred_res = requests.post(pred_url)
+    pred_data = pred_res.json()['prediction']
+    pred_df = pd.DataFrame(pred_data, columns=['Predicted income category'])
+
     # display the prediction
-    # st.write(data)
+    st.write(pred_df)
 
     # EVALUATION
     st.subheader('Evaluation')
     # get the data from flask api
-    #eval_url = ''
-    #eval_res = requests.post(eval_url)
-    #eval_data = pd.DataFrame(eval_res.json())
+    eval_url = 'http://127.0.0.1:5000/evaluate'
+    eval_res = requests.post(eval_url)
+    eval_data = eval_res.json()
     # display the prediction
-    # st.write(eval_data)
+    st.write('Model Accuracy: {accuracy}'.format(
+        accuracy=eval_data['accuracy']))
+    st.write('Precision: {precision}'.format(precision=eval_data['precision']))
+    st.write('Confusion matrix: {cfmatrix}'.format(
+        cfmatrix=eval_data['confussion matrix']))
 
     # CHART
     st.subheader('Chart')
-    st.write('Chart goes here')
+    pred_options = st.selectbox('Select chart option to display', [
+                                'Years of coding', 'Developer type', 'Languages/frameworks', 'Education Level'])
