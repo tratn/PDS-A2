@@ -134,13 +134,13 @@ X_train, X_test, y_train, y_test = train_test_split(
 train_pool = Pool(X_train, y_train, cat_features)
 
 
-catboost_model = CatBoostClassifier(iterations=250,
-                                    learning_rate=0.7,
-                                    depth=6,
-                                    random_seed=42,
-                                    loss_function='MultiClass')
+# catboost_model = CatBoostClassifier(iterations=250,
+#                                     learning_rate=0.7,
+#                                     depth=6,
+#                                     random_seed=42,
+#                                     loss_function='MultiClass')
 
-# Fit CatBoost model
-catboost_model.fit(train_pool)
+# # Fit CatBoost model
+# catboost_model.fit(train_pool)
 
 # pickle.dump(catboost_model, open('model.pkl', 'wb'))
