@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import requests
-import json
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -169,7 +168,7 @@ if app_mode is 'Exploration':
     # plot styling
     fig.update_layout(
         title_text='Most important job factors by gender',
-        width=1000,
+        width=800,
         height=500,
         margin=dict(
             pad=10,
@@ -201,7 +200,22 @@ elif app_mode is 'Prediction':
     pred_df = pd.DataFrame(pred_data, columns=['Predicted income category'])
 
     # display the prediction
-    st.write(pred_df)
+    st.write(pred_df.head())
+
+    # option to download prediction output as csv file
+
+    @st.cache
+    def df_to_csv(df):
+        return df.to_csv().encode('utf-8')
+
+    csv = df_to_csv(pred_df)
+
+    st.download_button(
+        label="Download prediction as CSV",
+        data=csv,
+        file_name='predictions.csv',
+        mime='text/csv',
+    )
 
     # EVALUATION
     st.subheader('Evaluation metrics')
@@ -209,13 +223,15 @@ elif app_mode is 'Prediction':
     eval_url = 'http://127.0.0.1:5000/evaluate'
     eval_res = requests.post(eval_url)
     eval_data = eval_res.json()
-    # display the prediction
-    st.write('Model Accuracy: {accuracy:.4f}'.format(
-        accuracy=eval_data['accuracy']))
-    st.write('Precision: {precision:.4f}'.format(
-        precision=eval_data['precision']))
-    st.write('Confusion matrix: {cfmatrix}'.format(
-        cfmatrix=eval_data['confusion matrix']))
+    # display the metrics
+    col1, col2 = st.columns(2)
+    col1.metric(label="Accuracy", value="{0:.4f}".format(
+        eval_data['accuracy']))
+    col2.metric(label="Precision", value="{0:.4f}".format(
+        eval_data['precision']))
+    st.write('Confusion Matrix')
+    st.write(eval_data['confusion matrix'])
+
     # display classification report
 
     cf_report_cat1 = pd.json_normalize(
@@ -264,7 +280,7 @@ elif app_mode is 'Prediction':
         title_text='Total counts for predicted income category',
         xaxis_title='Income category',
         yaxis_title='Frequency',
-        width=1000,
+        width=800,
         height=500,
         margin=dict(
             pad=10,
