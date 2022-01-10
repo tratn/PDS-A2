@@ -82,18 +82,20 @@ if app_mode is 'Exploration':
     workhrs_jobsat = data.loc[:, ['WorkWeekHrs', 'JobSat']]
     # plot the data
     fig = go.Figure()
-    jobsat = ['slightly dissatisfied', 'very satisfied', 'very dissatisfied',
-              'slightly satisfied', 'neither satisfied nor dissatisfied', 'notmentioned']
+    jobsat = ['very satisfied', 'very dissatisfied']
     for jobsat_type in jobsat:
-        fig.add_trace(go.Box(
-            x=data['JobSat'][data['JobSat'] == jobsat_type],
-            y=data['WorkWeekHrs'][data['JobSat'] == jobsat_type])
+        fig.add_trace(go.Violin(
+            y=data['JobSat'][data['JobSat'] == jobsat_type],
+            x=data['WorkWeekHrs'][data['JobSat'] == jobsat_type],
+            name=jobsat_type,
+            box_visible=True,
+            meanline_visible=True)
         )
     # plot styling
     fig.update_layout(
         title_text='Total working hours per week and job satisfaction level',
-        width=700,
-        height=900,
+        xaxis_title='Weekly working hours',
+        yaxis_title='Job statisfaction level',
         margin=dict(
             pad=10
         ),
@@ -103,13 +105,21 @@ if app_mode is 'Exploration':
         xaxis=dict(
             showgrid=False
         ),
-        showlegend=False,
-        violingap=0.2)
+        showlegend=False)
+
+    fig.update_traces(orientation='h')  # horizontal box plots
+
     # display the plot
     st.plotly_chart(fig)
 
+    # explain for the plot
+    st.write("There have been many research studies looking at impact of working hours on employee's job satisfaction. For an average person, the total number of weekly working hours is estimated to be around 40. Looking at most dense region of the violin plot, we can see that majority survey respondents work around 40 hours per week.")
+    st.write("The upper adjacent values for 'very satisfied' and 'very dissatisfied' are 40 and 50 respectively. This shows that those who feel dissatisfied at their job tends to have longer working hours.")
+
     # CHART FOR COLUMN PAIR 2
     st.subheader('Job Factors and Gender')
+    st.write('Different genders might have different values and workplace expectations. The chart below shows some of the most important job factors for each gender type.')
+
     # get the data
     jobfact = data['JobFactors'].str.get_dummies(sep=';')
     jobfact_gender = jobfact.join(data['Gender'])
@@ -174,6 +184,9 @@ if app_mode is 'Exploration':
     )
     # display the plot
     st.plotly_chart(fig)
+
+    # explain the plot
+    st.write("As can be seen from the graph, having flexibile work time/schedule is the second most important job factor among the three gender representations. Majority of male survey respondents consider the language/framework they work with to be most important job factor. On the contrary, female and non-binary/genderqueer/gender non-conforming respondents identify office environment and company culture to be most important.")
 
 # PAGE 2: PREDICTiON
 elif app_mode is 'Prediction':
