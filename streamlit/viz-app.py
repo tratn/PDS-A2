@@ -179,9 +179,6 @@ if app_mode is 'Exploration':
 elif app_mode is 'Prediction':
     st.title('Multi-label classification')
 
-    # FEATURES
-    st.subheader('Features')
-
     # PREDICTION
     st.subheader('Prediction')
     # get the data from flask api
@@ -194,19 +191,79 @@ elif app_mode is 'Prediction':
     st.write(pred_df)
 
     # EVALUATION
-    st.subheader('Evaluation')
+    st.subheader('Evaluation metrics')
     # get the data from flask api
     eval_url = 'http://127.0.0.1:5000/evaluate'
     eval_res = requests.post(eval_url)
     eval_data = eval_res.json()
     # display the prediction
-    st.write('Model Accuracy: {accuracy}'.format(
+    st.write('Model Accuracy: {accuracy:.4f}'.format(
         accuracy=eval_data['accuracy']))
-    st.write('Precision: {precision}'.format(precision=eval_data['precision']))
+    st.write('Precision: {precision:.4f}'.format(
+        precision=eval_data['precision']))
     st.write('Confusion matrix: {cfmatrix}'.format(
-        cfmatrix=eval_data['confussion matrix']))
+        cfmatrix=eval_data['confusion matrix']))
+    # display classification report
+
+    cf_report_cat1 = pd.json_normalize(
+        eval_data['classification_report']['< 25k'])
+    cf_report_cat2 = pd.json_normalize(
+        eval_data['classification_report']['< 50k'])
+    cf_report_cat3 = pd.json_normalize(
+        eval_data['classification_report']['< 100k'])
+    cf_report_cat4 = pd.json_normalize(
+        eval_data['classification_report']['> 100k'])
+
+    st.subheader('Classification report')
+    st.write('Income category: 0 to under 25,000 USD')
+    st.write(cf_report_cat1)
+    st.write('Income category: 25,000 to under 50,000 USD')
+    st.write(cf_report_cat2)
+    st.write('Income category: 50,000 to under 100,000 USD')
+    st.write(cf_report_cat3)
+    st.write('Income category: above 100,000 USD ')
+    st.write(cf_report_cat4)
 
     # CHART
     st.subheader('Chart')
     pred_options = st.selectbox('Select chart option to display', [
-                                'Years of coding', 'Developer type', 'Languages/frameworks', 'Education Level'])
+        'Years of coding', 'Developer type', 'Languages/frameworks', 'Education Level'])
+
+    # prepare prediction data to plot
+    income_cat = pred_df['Predicted income category'].value_counts(
+    ).index.tolist()
+    frequencies = pred_df['Predicted income category'].value_counts(
+    ).values
+
+    # plot the data
+    fig = go.Figure(data=[go.Scatter(
+        x=income_cat, y=frequencies,
+        mode='markers',
+        marker=dict(
+            color=['rgb(93, 164, 214)', 'rgb(255, 144, 14)',
+                   'rgb(44, 160, 101)', 'rgb(255, 65, 54)'],
+            size=frequencies/20,
+
+        )
+    )])
+
+    fig.update_layout(
+        title_text='Total counts for predicted income category',
+        xaxis_title='Income category',
+        yaxis_title='Frequency',
+        width=1000,
+        height=500,
+        margin=dict(
+            pad=10,
+        ),
+        yaxis=dict(
+            showgrid=False
+        ),
+        xaxis=dict(
+            showgrid=False
+        ),
+        showlegend=False
+    )
+
+    # display the plot
+    st.plotly_chart(fig)
