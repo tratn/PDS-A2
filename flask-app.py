@@ -250,7 +250,7 @@ def evaluate():
         "accuracy": accuracy,
         "precision": precision,
         "classification_report": report,
-        "confussion matrix": matrix
+        "confusion matrix": matrix
     }
     return jsonify(result)
 
