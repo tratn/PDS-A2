@@ -15,13 +15,12 @@ with open(MODEL_PATH, "rb") as rf:
 
 # Preprocessing data
 
-
 def preprocessing_data():
-    # READ DATA
+    ### READ DATA
     url = 'survey_results_public.csv'
     preprocess = pd.read_csv(url, sep=',')
 
-    # MISSING VALUE
+    ### MISSING VALUE
     # list of mandatory columns.
     # 'RespodentID' is assigned automatically, hence not included in this list
     mandatory_cols = ['MainBranch', 'Hobbyist', 'Country',
@@ -29,6 +28,7 @@ def preprocessing_data():
     preprocess.dropna(subset=mandatory_cols, inplace=True)
     # drop missing values for CompFreq
     preprocess.dropna(subset=['CompFreq', 'CompTotal'], axis=0, inplace=True)
+
     dkk_to_usd = 138936.0/80000.0
     converted_comp = preprocess.loc[preprocess.index.isin(
         [47224]), 'CompTotal']*dkk_to_usd
@@ -51,70 +51,53 @@ def preprocessing_data():
     cat_cols = preprocess.select_dtypes(include=[object]).columns.tolist()
     preprocess[cat_cols] = preprocess[cat_cols].fillna(value='NotMentioned')
 
-    # WHITESPACES/STRING MANIPULATION
+    ### WHITESPACES/STRING MANIPULATION
     # remove whitespace
     preprocess = preprocess.apply(
         lambda x: x.str.strip() if x.dtype == "object" else x)
     # transform letter to lowercase
     preprocess = preprocess.apply(
         lambda x: x.str.lower() if x.dtype == "object" else x)
+    
+    # Replace highest/lowest values with the corresponding float value
+    # Replace 'notmentioned' values with the MODE value
+    preprocess['Age1stCode'] = preprocess['Age1stCode'].replace("younger than 5 years", "4")
+    preprocess['Age1stCode'] = preprocess['Age1stCode'].replace("older than 85", "86")
+    preprocess['Age1stCode'] = preprocess['Age1stCode'].replace("notmentioned", "14")
 
-    # EXTREME VALUES
-    preprocess.drop(
-        preprocess.loc[preprocess['Age'] == 279].index, inplace=True)
-    preprocess.drop(
-        preprocess.loc[preprocess['WorkWeekHrs'] > (24*7)].index, inplace=True)
+    preprocess['YearsCode'] = preprocess['YearsCode'].replace("less than 1 year", "0.5")
+    preprocess['YearsCode'] = preprocess['YearsCode'].replace("more than 50 years", "51")
+    preprocess['YearsCode'] = preprocess['YearsCode'].replace("notmentioned", "10")
+
+    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].replace("less than 1 year", "0.5")
+    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].replace("more than 50 years", "51")
+    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].replace("notmentioned", "3")
+    
+    # Cast 'Age1stCode', 'YearsCode', 'YearsCodePro' to float type
+    for col in ['Age1stCode', 'YearsCode', 'YearsCodePro']:
+        preprocess[col] = preprocess[col].astype('float64')
+
+    ## EXTREME VALUE AND OUTLIERS
+    preprocess.drop(preprocess[preprocess['Age1stCode'] > preprocess['Age']].index, inplace = True)
+    preprocess.drop(preprocess[preprocess['YearsCodePro'] > preprocess['YearsCode']].index, inplace = True)
+    # Outliers
+    outliers_df = preprocess.loc[(preprocess['Age'] > 80) | (preprocess['Age1stCode'] > 75)]
+    preprocess.drop(outliers_df.index, inplace = True)
+    # Impossible value
+    preprocess[preprocess['YearsCode'] > preprocess['Age']]
+    preprocess.loc[preprocess['YearsCode'] > preprocess['Age'], ['Age']] = preprocess['YearsCode'] + preprocess['Age1stCode']
+    preprocess.drop(preprocess.loc[preprocess['WorkWeekHrs'] > (24*7)].index, inplace=True)
+    # generate copy of ConvertedComp column
+    preprocess["ConvertedComp_Copy"] = preprocess["ConvertedComp"]
+    
     # Create categories for compensation
     preprocess["ConvertedComp"] = pd.cut(preprocess["ConvertedComp"],
-                                         bins=[0, 25000, 50000,
-                                               100000, np.inf],
-                                         labels=['< 25k', '< 50k',
-                                                 '< 100k', '> 100k'],
+                                         bins=[0, 24000, 48000,
+                                               96000, np.inf],
+                                         labels=['0-24k', '24k-48k', '48k-96k', '>96k'],
                                          include_lowest=True)
 
-    # ENCODE TO NUMERIC VALUES
-    # 'YearsCode' and 'YearsCodePro' column
-    # drop non-meaning value
-    preprocess = preprocess[preprocess.YearsCode != 'notmentioned']
-    preprocess = preprocess[preprocess.YearsCodePro != 'notmentioned']
-    # convert columns to categories
-    preprocess['YearsCode'] = preprocess['YearsCode'].astype('category')
-    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].astype('category')
-    # adding new categories
-    preprocess['YearsCode'] = preprocess['YearsCode'].cat.add_categories('0')
-    preprocess['YearsCode'] = preprocess['YearsCode'].cat.add_categories('51')
-    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].cat.add_categories(
-        '0')
-    preprocess['YearsCodePro'] = preprocess['YearsCodePro'].cat.add_categories(
-        '51')
-    # classifying the suitable entries
-    preprocess.loc[(preprocess['YearsCode'].isin(
-        ["less than 1 year"])), ['YearsCode']] = "0"
-    preprocess.loc[(preprocess['YearsCode'].isin(
-        ["more than 50 years"])), ['YearsCode']] = "51"
-    preprocess.loc[(preprocess['YearsCodePro'].isin(
-        ["less than 1 year"])), ['YearsCodePro']] = "0"
-    preprocess.loc[(preprocess['YearsCodePro'].isin(
-        ["more than 50 years"])), ['YearsCodePro']] = "51"
-    # converting the columns' datatypes to numeric
-    preprocess["YearsCode"] = pd.to_numeric(
-        preprocess["YearsCode"], errors='raise')
-    preprocess["YearsCodePro"] = pd.to_numeric(
-        preprocess["YearsCodePro"], errors='raise')
-
-    # Remove non-sense values
-    # remove outliers
-    preprocess = preprocess.loc[(preprocess['Age'] > 5)]
-    preprocess = preprocess.loc[(preprocess['Age'] < 80)]
-    # remove impossible value
-    preprocess = preprocess.loc[(
-        preprocess['YearsCode'] >= preprocess['YearsCodePro'])]
-    preprocess = preprocess.loc[(preprocess['Age'] > preprocess['YearsCode'])]
-    preprocess = preprocess.loc[(
-        preprocess['Age'] > preprocess['YearsCodePro'])]
-    preprocess = preprocess.loc[(preprocess['WorkWeekHrs'] < 24*7)]
-
-    # 'NEWOvertime' column
+    ## 'NEWOvertime' feature
     # drop non-meaning value
     preprocess = preprocess[preprocess.NEWOvertime != 'notmentioned']
     # convert columns to categories
@@ -145,20 +128,20 @@ def preprocessing_data():
     preprocess["NEWOvertime"] = pd.to_numeric(
         preprocess["NEWOvertime"], errors='raise')
 
-    # LABEL ENCODING FOR BETTER PREDICT
+    ### LABEL ENCODING FOR BETTER PREDICT
     label_encoder = preprocessing.LabelEncoder()
     # Transform data
 
     def label_encode(column, dataset):
         dataset[column] = label_encoder.fit_transform(dataset[column])
 
-    # Encode labels in columns.
+    ## Encode labels in columns.
     LabEnArr = ['Country', 'Employment', 'CompFreq',
                 'OpSys', 'OrgSize', 'EdLevel', 'MainBranch']
     for i in LabEnArr:
         label_encode(i, preprocess)
 
-    # CREATE NEW FEATURES FROM 'DevType'
+    ### CREATE NEW FEATURES FROM 'DevType'
     # method to check if the user have specific role that we want
     def get_DevType(type, data):
         column = 'DevType_' + type
@@ -177,7 +160,7 @@ def preprocessing_data():
     DevType_df = preprocess.loc[:,
                                 preprocess.columns.str.startswith('DevType_')]
 
-    # MERGE DATESET WITH NEW FEATURES AND SPLIT THE DATASET FOR TESTING API
+    ### MERGE DATESET WITH NEW FEATURES AND SPLIT THE DATASET FOR TESTING API
     # split X, y
     X = preprocess[['MainBranch', 'Country', 'Employment', 'CompFreq', 'OpSys', 'OrgSize', 'EdLevel', 'WorkWeekHrs',
                     'Age', 'YearsCode', 'YearsCodePro', 'NEWOvertime']]
