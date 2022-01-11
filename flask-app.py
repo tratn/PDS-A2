@@ -9,6 +9,8 @@ from sklearn.model_selection import KFold
 from flask import Flask, jsonify, request, render_template
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
 
 MODEL_PATH = "pickle_model.pkl"
 with open(MODEL_PATH, "rb") as rf:
@@ -21,7 +23,8 @@ def preprocessing_data():
     url = 'survey_results_public.csv'
     preprocess = pd.read_csv(url, sep=',')
 
-    ### MISSING VALUE
+    ### DATA CLEANING
+    ## MISSING VALUE
     # list of mandatory columns.
     # 'RespodentID' is assigned automatically, hence not included in this list
     mandatory_cols = ['MainBranch', 'Hobbyist', 'Country',
@@ -108,7 +111,8 @@ def preprocessing_data():
                                          labels=['0-24k', '24k-48k', '48k-96k', '>96k'],
                                          include_lowest=True)
 
-    ### CREATE NEW FEATURES 
+    ### DATA MODELLING
+    ## CREATE NEW FEATURES 
     def count_unique_value(row):
         values = re.split(';', row)   
         return len(values)
@@ -139,7 +143,7 @@ def preprocessing_data():
     df_data = pd.concat([preprocess['ConvertedComp'], preprocess[num_feats], preprocess[cate_feats], preprocess[othe_cols]], axis=1)
 
 
-    ### EXTRACT INFORMATION AND ENCODING
+    ## EXTRACT INFORMATION AND ENCODING
     def split_value(dataframe, col):
         values_dict = set()
 
@@ -216,8 +220,6 @@ def evaluate_function(model):
     y_pred = pkl.predict(X_test_SS)
 
     # evaluate
-    from sklearn.metrics import accuracy_score
-    from sklearn.metrics import precision_score
     accuracy = accuracy_score(y_test_SS, y_pred)
     precision = precision_score(y_test_SS, y_pred, average='macro')
     report = classification_report(y_test_SS, y_pred, output_dict=True)
