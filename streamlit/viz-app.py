@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import requests
+import time
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -195,7 +196,18 @@ elif app_mode is 'Prediction':
     st.subheader('Prediction')
     # get the data from flask api
     pred_url = 'http://127.0.0.1:5000/predict'
-    pred_res = requests.post(pred_url)
+
+    pred_res = ''
+    while pred_res == '':
+        try:
+            pred_res = requests.post(url=pred_url, verify=False)
+            break
+        except:
+            print('Connection refused')
+            print('Restablishing connection')
+            time.sleep(7)
+            continue
+
     pred_data = pred_res.json()['prediction']
     pred_df = pd.DataFrame(pred_data, columns=['Predicted income category'])
 
@@ -221,7 +233,18 @@ elif app_mode is 'Prediction':
     st.subheader('Evaluation metrics')
     # get the data from flask api
     eval_url = 'http://127.0.0.1:5000/evaluate'
-    eval_res = requests.post(eval_url)
+
+    eval_res = ''
+    while eval_res == '':
+        try:
+            eval_res = requests.post(url=eval_url, verify=False)
+            break
+        except:
+            print('Connection refused')
+            print('Restablishing connection')
+            time.sleep(7)
+            continue
+
     eval_data = eval_res.json()
     # display the metrics
     col1, col2 = st.columns(2)
@@ -235,22 +258,22 @@ elif app_mode is 'Prediction':
     # display classification report
 
     cf_report_cat1 = pd.json_normalize(
-        eval_data['classification_report']['< 25k'])
+        eval_data['classification_report']['0-24k'])
     cf_report_cat2 = pd.json_normalize(
-        eval_data['classification_report']['< 50k'])
+        eval_data['classification_report']['24k-48k'])
     cf_report_cat3 = pd.json_normalize(
-        eval_data['classification_report']['< 100k'])
+        eval_data['classification_report']['48k-96k'])
     cf_report_cat4 = pd.json_normalize(
-        eval_data['classification_report']['> 100k'])
+        eval_data['classification_report']['>96k'])
 
     st.subheader('Classification report')
-    st.write('Income category: 0 to under 25,000 USD')
+    st.write('Income category: 0 - 24,000 USD')
     st.write(cf_report_cat1)
-    st.write('Income category: 25,000 to under 50,000 USD')
+    st.write('Income category: 24,000 - 48,000 USD')
     st.write(cf_report_cat2)
-    st.write('Income category: 50,000 to under 100,000 USD')
+    st.write('Income category: 48,000 - 96,000 USD')
     st.write(cf_report_cat3)
-    st.write('Income category: above 100,000 USD ')
+    st.write('Income category: > 96,000 USD ')
     st.write(cf_report_cat4)
 
     # CHART
