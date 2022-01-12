@@ -6,6 +6,7 @@ import requests
 import time
 import json
 import numpy as np
+import re
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -330,8 +331,35 @@ elif app_mode is 'Prediction':
         title = 'Education level across 4 income categories'
         xaxis_title = 'Income category'
         yaxis_title = 'Value'
+
     #TODO: DevType
+    elif pred_options == 'Developer type':
+        # prepare the data
+        devtype_income_df = pd.DataFrame(pred_metadata_df.groupby(
+            'PredictedIncome').DevType.value_counts())
+        devtype_income_df.rename(
+            columns={'DevType': 'DevType_count'}, inplace=True)
+        devtype_income_df = devtype_income_df.reset_index()
+
+        # create figure
+        fig = px.bar(devtype_income_df, x='PredictedIncome',
+                     y='DevType_count', color='DevType')
+        title = 'Developer type across 4 income categories'
+        xaxis_title = 'Income category'
+        yaxis_title = 'Value'
+
     #TODO: Language/Framework
+    else:
+        # prepare dataframe of languages and their percentage
+        lang_df = split_unique_value(pred_metadata_df, 'LanguageWorkedWith')
+        lang_df_ = group_other_values(lang_df, 'LanguageWorkedWith')
+
+        # draw the pie chart based on selected dataset
+        fig = px.pie(lang_df_, 
+        values=lang_df_['percentage'], 
+        names=lang_df_[value], 
+        color_discrete_sequence=px.colors.sequential.RdBu) 
+        title = 'Languages used by developers across 4 income categories'
 
     # plot styling
     fig.update_layout(
@@ -354,3 +382,32 @@ elif app_mode is 'Prediction':
 
     # display the plot
     st.plotly_chart(fig)
+
+
+    # helper function
+    # function to split values for language column
+    def split_unique_value(dataframe, col):
+        values_dict = {}
+
+        for index, row in dataframe.iterrows():
+            values = re.split(';', row[col])
+            for value in values:
+                if value in values_dict:
+                    values_dict[value] += 1
+                else:
+                    values_dict[value] = 1
+                    
+        dict_df = pd.DataFrame.from_dict(values_dict, orient='index').reset_index().rename({'index': col, 0 :'count'}, axis=1)
+        dict_df['percentage'] = 100 * dict_df['count'] / dict_df['count'].sum()
+        dict_df = dict_df.sort_values(by='percentage', ascending=False)
+        
+        return dict_df
+
+    # function to group language to 'others'
+    def group_other_values(dataframe, col):
+        # Assign new value 'others' for all languages which are used by < 1% of developers
+        dataframe.loc[dataframe['percentage'] < 1.00, col] = 'others'
+        dataframe = dataframe.groupby([col]).sum().reset_index()
+        dataframe = dataframe.sort_values(by='percentage', ascending=False)
+        
+        return dataframe
