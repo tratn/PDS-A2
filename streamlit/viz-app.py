@@ -270,13 +270,13 @@ elif app_mode is 'Prediction':
         eval_data['classification_report']['>96k'])
 
     st.subheader('Classification report')
-    st.write('Income category: 0 - 24,000 USD')
+    st.write('Income category: 0 to under 24,000 USD')
     st.write(cf_report_cat1)
-    st.write('Income category: 24,000 - 48,000 USD')
+    st.write('Income category: 24,000 to under 48,000 USD')
     st.write(cf_report_cat2)
-    st.write('Income category: 48,000 - 96,000 USD')
+    st.write('Income category: 48,000 to under 96,000 USD')
     st.write(cf_report_cat3)
-    st.write('Income category: > 96,000 USD ')
+    st.write('Income category: above 96,000 USD')
     st.write(cf_report_cat4)
 
     # CHART
