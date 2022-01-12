@@ -3,6 +3,7 @@ import re
 import pickle
 import pandas as pd
 import numpy as np
+import json
 
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.model_selection import KFold
@@ -234,8 +235,11 @@ def predict_function(pkl):
 @app.route("/predict", methods=['POST'])
 def predict():
     predictions = predict_function(pkl)
+    metadata = X_test_SS.to_json()
+    parsed_metadata = json.loads(metadata)
     result = {
-        'prediction': list(predictions)
+        'prediction': list(predictions),
+        'metadata': parsed_metadata
     }
 
     return jsonify(result)
@@ -273,4 +277,4 @@ def evaluate():
 if __name__ == '__main__':
     X, y = preprocessing_data()
     X_test_SS, y_test_SS = train_test_split(X, y)
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
