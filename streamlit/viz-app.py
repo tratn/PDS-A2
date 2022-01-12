@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 import requests
 import time
+import json
+import numpy as np
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -208,8 +211,8 @@ elif app_mode is 'Prediction':
             time.sleep(7)
             continue
 
-    pred_data = pred_res.json()['prediction']
-    pred_df = pd.DataFrame(pred_data, columns=['Predicted income category'])
+    pred_data = json.loads(pred_res.text)['prediction']
+    pred_df = pd.DataFrame(pred_data, columns=['PredictedIncome'])
 
     # display the prediction
     st.write(pred_df.head())
@@ -245,7 +248,7 @@ elif app_mode is 'Prediction':
             time.sleep(7)
             continue
 
-    eval_data = eval_res.json()
+    eval_data = json.loads(eval_res.text)
     # display the metrics
     col1, col2 = st.columns(2)
     col1.metric(label="Accuracy", value="{0:.4f}".format(
@@ -277,32 +280,64 @@ elif app_mode is 'Prediction':
     st.write(cf_report_cat4)
 
     # CHART
+    # get the metadata
+    pred_metadata = pred_res.json()['metadata']
+    pred_metadata_df = pd.DataFrame(pred_metadata)
+
+    # join the metadata with the prediction
+    # use this dataframe for visualisation
+    pred_metadata_df['PredictedIncome'] = pred_df['PredictedIncome'].values
+
+    # display chart options
     st.subheader('Chart')
     pred_options = st.selectbox('Select chart option to display', [
-        'Years of coding', 'Developer type', 'Languages/frameworks', 'Education Level'])
+        'Years of coding', 'Education Level', 'Developer type', 'Languages/frameworks'])
 
-    # prepare prediction data to plot
-    income_cat = pred_df['Predicted income category'].value_counts(
-    ).index.tolist()
-    frequencies = pred_df['Predicted income category'].value_counts(
-    ).values
+    # plot the data based on selected option
+    if pred_options == 'Years of coding':
+        # prepare the data
+        income_cat = pred_metadata_df.groupby(
+            'PredictedIncome').YearsCode.mean().index.tolist()
+        mean_years_code = pred_metadata_df.groupby(
+            'PredictedIncome').YearsCode.mean().values.tolist()
+        # create figure
+        fig = go.Figure(data=[go.Scatter(
+            x=income_cat, y=mean_years_code,
+            mode='markers',
+            marker=dict(
+                color=['rgb(93, 164, 214)', 'rgb(255, 144, 14)',
+                       'rgb(44, 160, 101)', 'rgb(255, 65, 54)'],
+                size=np.array(mean_years_code)*3,
 
-    # plot the data
-    fig = go.Figure(data=[go.Scatter(
-        x=income_cat, y=frequencies,
-        mode='markers',
-        marker=dict(
-            color=['rgb(93, 164, 214)', 'rgb(255, 144, 14)',
-                   'rgb(44, 160, 101)', 'rgb(255, 65, 54)'],
-            size=frequencies/20,
+            )
+        )])
+        # set title and styling
+        title = 'Average number of years of coding across 4 income categories'
+        xaxis_title = 'Income category'
+        yaxis_title = 'Mean total years of coding'
+    elif pred_options == 'Education Level':
+        # prepare the data
+        edlevel_income_df = pd.DataFrame(pred_metadata_df.groupby(
+            'PredictedIncome').EdLevel.value_counts())
+        edlevel_income_df.rename(
+            columns={'EdLevel': 'EdLevel_count'}, inplace=True)
+        edlevel_income_df = edlevel_income_df.reset_index()
+        edlevel_labels = edlevel_income_df['EdLevel'].unique().tolist()
 
-        )
-    )])
+        # create figure
+        fig = px.bar(edlevel_income_df, x='PredictedIncome',
+                     y='EdLevel_count', color='EdLevel')
+        title = 'Education level across 4 income categories'
+        xaxis_title = 'Income category'
+        yaxis_title = 'Value'
+    #TODO: DevType
+    #TODO: Language/Framework
 
+    # plot styling
     fig.update_layout(
-        title_text='Total counts for predicted income category',
-        xaxis_title='Income category',
-        yaxis_title='Frequency',
+        title_text=title,
+        xaxis_title=xaxis_title,
+        yaxis_title=yaxis_title,
         width=800,
         height=500,
         margin=dict(
