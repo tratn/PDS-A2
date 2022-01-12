@@ -235,22 +235,22 @@ elif app_mode is 'Prediction':
     # display classification report
 
     cf_report_cat1 = pd.json_normalize(
-        eval_data['classification_report']['< 25k'])
+        eval_data['classification_report']['0-24k'])
     cf_report_cat2 = pd.json_normalize(
-        eval_data['classification_report']['< 50k'])
+        eval_data['classification_report']['24k-48k'])
     cf_report_cat3 = pd.json_normalize(
-        eval_data['classification_report']['< 100k'])
+        eval_data['classification_report']['48k-96k'])
     cf_report_cat4 = pd.json_normalize(
-        eval_data['classification_report']['> 100k'])
+        eval_data['classification_report']['>96k'])
 
     st.subheader('Classification report')
-    st.write('Income category: 0 to under 25,000 USD')
+    st.write('Income category: 0 to under 24,000 USD')
     st.write(cf_report_cat1)
-    st.write('Income category: 25,000 to under 50,000 USD')
+    st.write('Income category: 24,000 to under 48,000 USD')
     st.write(cf_report_cat2)
-    st.write('Income category: 50,000 to under 100,000 USD')
+    st.write('Income category: 48,000 to under 96,000 USD')
     st.write(cf_report_cat3)
-    st.write('Income category: above 100,000 USD ')
+    st.write('Income category: above 96,000 USD ')
     st.write(cf_report_cat4)
 
     # CHART
