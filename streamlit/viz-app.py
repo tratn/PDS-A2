@@ -15,7 +15,7 @@ if app_mode is 'Exploration':
     st.caption('The dataset contains responses from the 2020 Stack Overflow Developer survey, which is among the largest and most comprehensive survey of software developers. Below the first few rows of the dataset, together with the attributes that correspond to the questions included in the survey.')
 
     # DATAFRAME
-    data = pd.read_csv('cleaned_survey.csv')
+    data = pd.read_csv('cleaned_data.csv')
     st.write(data.head())
 
     # CHART FOR DEMOGRAPHIC FACTOR
