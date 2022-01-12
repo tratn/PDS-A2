@@ -250,7 +250,7 @@ elif app_mode is 'Prediction':
     st.write(cf_report_cat2)
     st.write('Income category: 48,000 to under 96,000 USD')
     st.write(cf_report_cat3)
-    st.write('Income category: above 96,000 USD ')
+    st.write('Income category: above 96,000 USD')
     st.write(cf_report_cat4)
 
     # CHART
