@@ -16,4 +16,4 @@ The script can be found in the "streamlit/viz-app.py" directory
 1. To run the script, first you need to install streamlit. On Windows 10, you can use "pip install streamlit" command on terminal
 2. Navigate to the streamlit folder on the terminal using "cd streamlit".
 3. Run the command: "streamlit run viz-app.py"
-4. Open another web browser and type in the url: "http://localhost:8501" to access the visualization interfaces.
+4. Open another web browser and type in the url: "http://localhost:8501/" to access the visualization interfaces.
