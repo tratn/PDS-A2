@@ -6,6 +6,7 @@ import requests
 import time
 import json
 import numpy as np
+import re
 
 # PAGE SIDEBAR
 st.sidebar.title('Select the page to display visualisation')
@@ -291,7 +292,7 @@ elif app_mode is 'Prediction':
     # display chart options
     st.subheader('Chart')
     pred_options = st.selectbox('Select chart option to display', [
-        'Years of coding', 'Education Level', 'Developer type', 'Languages/frameworks'])
+        'Years of coding', 'Education Level', 'Organization Size'])
 
     # plot the data based on selected option
     if pred_options == 'Years of coding':
@@ -330,8 +331,22 @@ elif app_mode is 'Prediction':
         title = 'Education level across 4 income categories'
         xaxis_title = 'Income category'
         yaxis_title = 'Value'
-    #TODO: DevType
-    #TODO: Language/Framework
+
+    #TODO: OrgSize
+    else:
+        # prepare the data
+        orgsize_income_df = pd.DataFrame(pred_metadata_df.groupby(
+            'PredictedIncome').OrgSize.value_counts())
+        orgsize_income_df.rename(
+            columns={'OrgSize': 'OrgSize_count'}, inplace=True)
+        orgsize_income_df = orgsize_income_df.reset_index()
+
+        # create figure
+        fig = px.bar(orgsize_income_df, x='PredictedIncome',
+                     y='OrgSize_count', color='OrgSize')
+        title = 'Organization size among developers across 4 income categories'
+        xaxis_title = 'Income category'
+        yaxis_title = 'Value'
 
     # plot styling
     fig.update_layout(
@@ -354,3 +369,4 @@ elif app_mode is 'Prediction':
 
     # display the plot
     st.plotly_chart(fig)
+
