@@ -6,3 +6,4 @@ pickle==4.0
 Flask==2.0.2
 streamlit==0.82.0
 xgboost==1.5.1
+catboost==1.0.3
